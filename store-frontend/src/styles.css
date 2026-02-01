@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+}
+
+.container {
+  @apply px-4 md:px-6;
+}
+
+.btn {
+  @apply inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-95 active:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed;
+}
+.btn-outline {
+  @apply border border-border bg-transparent text-foreground hover:bg-card;
+}
+.input {
+  @apply w-full rounded-md border border-border bg-card px-3 py-2 text-sm placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/60;
+}
+.label {
+  @apply text-sm text-foreground/80;
+}
+.card {
+  @apply rounded-xl border border-border bg-card shadow-soft;
+}
+.card-header {
+  @apply border-b border-border px-5 py-4 font-semibold;
+}
+.card-body {
+  @apply p-5;
+}
+.table {
+  @apply w-full border-collapse;
+}
+.table th {
+  @apply border-b border-border px-3 py-2 text-left text-foreground/70 text-sm font-medium;
+}
+.table td {
+  @apply border-b border-border px-3 py-3 text-sm;
+}
+.badge {
+  @apply inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs text-foreground/80;
+}
+.pagination {
+  @apply mt-4 flex items-center justify-between gap-2;
+}
