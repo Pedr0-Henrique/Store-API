@@ -1,6 +1,13 @@
 # Store (API + Frontend)
 
-Projeto full-stack de exemplo para gerenciamento de uma loja (categorias, produtos, clientes e pedidos).
+Projeto full-stack para gerenciamento de uma loja, com **API REST** e **Frontend web**.
+
+O sistema permite:
+
+- **Cadastrar e gerenciar categorias, produtos e clientes**
+- **Criar pedidos com múltiplos itens** (produto + quantidade)
+- **Atualizar status do pedido** (fluxo dedicado via `PATCH`)
+- **Aplicar regras de negócio/validações** (ex.: não excluir categoria com produtos)
 
 ## Tecnologias
 
@@ -87,20 +94,100 @@ Opcionalmente você pode apontar diretamente para a API via variável:
 
 - `VITE_API_URL` (ex.: `http://localhost:8080/api/v1`)
 
-## Funcionalidades principais
+## Funcionalidades
 
-- **Categorias**
-  - CRUD via `/api/v1/categories`
-- **Produtos**
-  - CRUD via `/api/v1/products`
-- **Clientes**
-  - CRUD via `/api/v1/customers`
-  - Contagem de pedidos por cliente via `/api/v1/customers/{id}/orders/count` (total e em aberto)
-- **Pedidos**
-  - CRUD via `/api/v1/orders`
-  - Atualização de status via `PATCH /api/v1/orders/{id}/status`
+### Categorias
 
-## Observações
+- **Cadastrar categoria**
+- **Listar categorias com paginação**
+- **Editar categoria**
+  - Atualização parcial via `PATCH`
+- **Excluir categoria**
+  - Bloqueia exclusão se existir **produto vinculado** (retorna **409 Conflict** com mensagem clara)
 
-- Atualizações parciais (UX): `PATCH` foi adotado para editar recursos sem precisar enviar todos os campos.
-- Algumas exclusões podem ser bloqueadas por relacionamentos (ex.: categoria com produtos, cliente com pedidos). Nesses casos, a API responde com **409 Conflict** e uma mensagem explicando o motivo.
+### Produtos
+
+- **Cadastrar produto** (associando uma categoria)
+- **Listar produtos com paginação**
+- **Editar produto**
+  - Atualização parcial via `PATCH` (ex.: alterar só preço ou só categoria)
+- **Excluir produto**
+  - Bloqueia exclusão se o produto estiver referenciado em **itens de pedido** (retorna **409 Conflict**)
+
+### Clientes
+
+- **Cadastrar cliente**
+  - Validação de **email único**
+- **Listar clientes com paginação**
+- **Editar cliente**
+  - Atualização parcial via `PATCH`
+- **Excluir cliente**
+  - Bloqueia exclusão se o cliente possuir **pedidos** (retorna **409 Conflict**)
+- **Contagem de pedidos por cliente**
+  - `GET /api/v1/customers/{id}/orders/count`
+  - Retorna `total` e `open` (em aberto = não `DELIVERED` e não `CANCELED`)
+
+### Pedidos
+
+- **Criar pedido**
+  - Com **um ou mais itens** (produto + quantidade)
+  - Cálculo automático do **total** (somatório de subtotais)
+- **Listar pedidos com paginação**
+- **Editar pedido**
+  - Alterações estruturais (cliente/itens) via `PUT /orders/{id}`
+- **Editar status do pedido**
+  - Endpoint dedicado: `PATCH /orders/{id}/status`
+  - Mantém validações de transição e evita efeitos colaterais ao editar itens
+- **Excluir pedido**
+
+### Frontend (Web)
+
+- Páginas:
+  - **Categorias**
+  - **Produtos**
+  - **Clientes**
+  - **Pedidos**
+- **CRUD completo via modais** (criar/editar)
+- **Paginação** nas listagens
+- **Tratamento de erros** exibindo mensagens retornadas pela API (toasts)
+- No modal de pedido, exibe **contagem de pedidos do cliente** (total e em aberto)
+
+## Regras de negócio e validações
+
+- Atualizações parciais: endpoints `PATCH` aceitam apenas os campos que o usuário deseja alterar.
+- Restrições de exclusão:
+  - Categoria não pode ser excluída se tiver produtos.
+  - Cliente não pode ser excluído se tiver pedidos.
+  - Produto não pode ser excluído se estiver em itens de pedidos.
+- Erros de regra de negócio retornam **409 Conflict** com mensagem.
+
+## Endpoints (resumo)
+
+- **Categorias**: `/api/v1/categories`
+- **Produtos**: `/api/v1/products`
+- **Clientes**: `/api/v1/customers`
+- **Pedidos**: `/api/v1/orders`
+- **Status do pedido**: `PATCH /api/v1/orders/{id}/status`
+- **Pedidos por cliente (contagem)**: `GET /api/v1/customers/{id}/orders/count`
+
+## Como testar rapidamente (exemplos)
+
+Atualizar status do pedido:
+
+```bash
+curl -X PATCH http://localhost:8080/api/v1/orders/1/status \
+  -H "Content-Type: application/json" \
+  -d '{"status":"DELIVERED"}'
+```
+
+Ver contagem de pedidos do cliente:
+
+```bash
+curl http://localhost:8080/api/v1/customers/1/orders/count
+```
+
+## Observações técnicas
+
+- **CORS** configurado para permitir o frontend em `http://localhost:5173`.
+- **Swagger UI** disponível em `http://localhost:8080/swagger-ui.html`.
+- Banco com **Flyway** e `ddl-auto: validate` (o schema é controlado por migrações).
